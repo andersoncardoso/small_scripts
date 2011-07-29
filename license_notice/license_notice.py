@@ -11,17 +11,21 @@ class Licensing:
     def __init__(self, license_notice, root_folder):
         self.license_notice = license_notice
         self.root_folder = root_folder
-        self.file_extension = '.java'
+        self.file_extension = ('.cpp','.h','.java')
     
     def prepend_license(self, file_path):
         """
         prepends the license notice into a file
         """
-        print 'adding license to file: %s'%file_path
+       
         with open(file_path, 'r+') as f:
             old = f.read()
-            f.seek(0)
-            f.write(self.license_notice + old)
+            if (old.find(self.license_notice) >= 0):
+                print 'Ignoring File. License already added in file: %s'%file_path
+            else:
+			    f.seek(0)
+			    f.write(self.license_notice + old)
+			    print 'adding license to file: %s'%file_path
 
     def path_walker(self):
         for root,dirs,files in os.walk(self.root_folder):
