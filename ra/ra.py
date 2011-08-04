@@ -41,7 +41,7 @@ def analize_data(filename, data, texp, trec, num_exposicoes):
                 min_val = min(lista)
                 value.append(float(max_val - min_val)/min_val)
             #print 'ciclo %2d -> '%(i+1), 
-            for vl in value: f.write('%.3f  '%vl)
+            for vl in value: f.write(str('%.3f  ' % vl).replace('.',','))
             f.write('\n')
             
     
