@@ -1,0 +1,5 @@
+This is a simple script for parsing a bunch of markdown files.
+
+It walks all the way through a path tree with the root being the folder passed as argument.
+
+This is distributed under the MIT license. 
