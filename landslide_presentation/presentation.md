@@ -144,23 +144,6 @@ Environments and Dependencies
 
 -----
 
-Flaws 
-=====
-
-* Multi-threads and the GIL (global interpreter lock-in)
-    * Not a problem, just use multiprocessing (or async programming (evented))
-    * 'Only' affect standard VMs (pypy, jruby, etc ... don't have the gil)
-* Speed
-    * For the web, not a problem! 
-        * youtube uses it, mozilla uses it, google uses it... I can guarantee that our applications wont have as much requests)
-    * In the web is actually faster than some java applications
-    * Pypy and jRuby (also, python3 and ruby 1.9)
-* Less working hands
-    * easier to learn
-    * non-default ->  better/more interested people
-
------
-
 Language Characteristics - Ruby
 ===============================
     !ruby
@@ -208,15 +191,29 @@ Language Characteristics - Python
         => 1 
         type(n) 
         => <type 'int'> 
-        # namespaces == FUCK YEAH!!! 
+        # namespaces == FUCK YEAH!!
 
 -----
 
 **Some APIs** <br/> go to redmine
 =============       ==============
 
+-----
+
+Tests - Python
+==============
+
+- unittest:
 
 -----
+
+Tests - Ruby
+============
+
+-unittests:
+
+-----
+
 IDEs
 ====
 
@@ -600,6 +597,76 @@ some python goodies and other tips
 
 -----
 
+Django - auth / profiles
+========================
+
+
+-----
+
+Django - scalability - caches
+====================
+
+* Multiple caches? Nooo...thats hard!....isn't ? 
+
+-----
+
+Django - scalability - multi DBs
+================================
+
+Multiple DBs? c'mon... even harder u.ú ...no?
+
+    !python
+        DATABASES = {
+            'master': {
+                'NAME': 'app_data',
+                'ENGINE': 'django.db.backends.postgresql_psycopg2',
+                'USER': 'postgres_user',
+                'PASSWORD': 's3krit'
+            },
+            'slave1': {
+                'NAME': 'app_data_slave1',
+                'ENGINE': 'django.db.backends.postgresql_psycopg2',
+                'USER': 'postgres_user',
+                'PASSWORD': 's3krit'
+            }
+            'slave2': {
+                'NAME': 'app_data_slave2',
+                'ENGINE': 'django.db.backends.postgresql_psycopg2',
+                'USER': 'postgres_user',
+                'PASSWORD': 's3krit'
+            }
+        }
+        
+        DATABASE_ROUTERS = ['path.to.MasterSlaveRouter',]
+        
+ -----
+
+Django - scalability - multi DBs
+================================
+
+    !python
+        class MasterSlaveRouter(object):
+            def db_for_read(self, model, **hints):
+                "Point all read operations to a random slave"
+                return random.choice(['slave1','slave2'])
+
+            def db_for_write(self, model, **hints):
+                "Point all write operations to the master"
+                return 'master'
+
+            def allow_syncdb(self, db, model):
+                "Explicitly put all models on all databases."
+                return True
+
+<br/>
+
+* That's it =] .... big win!!
+* It's possible any kind on customization, for examples:
+    * one for master/slave read/write,
+    * in the other a DB specific to serve a single app (like users/auth or videos =] )
+
+-----
+
 Django - apps and goodies
 =========================
 * to name a few:  
@@ -610,7 +677,7 @@ django-profiles
 django-pagination  
 django-video  -> probably usefull  
 django-uploadify  
-django-debug-toolbar  
+**django-debug-toolbar**  
 **south**  -> migrations !!   
 django-paypal  
 django-avatar  
@@ -627,4 +694,5 @@ django-floppyforms  -> html5 forms  (same api from django.forms)
 
 Questions ?
 ===========
+
 
