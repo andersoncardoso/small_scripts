@@ -200,20 +200,6 @@ Language Characteristics - Python
 
 -----
 
-Tests - Python
-==============
-
-- unittest:
-
------
-
-Tests - Ruby
-============
-
--unittests:
-
------
-
 IDEs
 ====
 
@@ -227,81 +213,6 @@ IDEs
     * Rubymine
     * Unfortunately they are proprietary...but it worths every cent...seriously! 
 * Geany + plugins = more than enough
-
------
-
-Linking with Java (why? T_T) - Ruby
-====================================
-    !ruby
-        require 'java' 
-        java.lang.System.out.println "hello, world" 
-        reader = Java::jline.ConsoleReader.new 
-        obj = Java::SomeClassWithNoPackage.new 
-        System = java.lang.System 
-        java_import javax.swing.JButton 
-        puts System.nanos 
-        # Java constructors are just Class#new, as in Ruby 
-        frame = JFrame.new "My window!" 
-        # notice we allow setSize to work as set_size 
-        frame.set_size 300, 300 
-        # set* and get* properties work like Ruby attributes 
-        frame.always_on_top = true 
-        frame.visible = true 
-        button = JButton.new "Press me!" 
-        frame.add button
-        
------
-
-Linking with Java (why? T_T) - Python
-=====================================
-    !java
-        public class Beach { 
-            private String name; 
-            private String city; 
-            public Beach(String name, String city){ 
-                this.name = name; 
-                this.city = city; 
-            } 
-            public String getName() { 
-                return name; 
-            } 
-            public void setName(String name) { 
-                this.name = name; 
-            } 
-            public String getCity() { 
-                return city; 
-            } 
-            public void setCity(String city) { 
-                this.city = city; 
-            } 
-        }
------
-
-Linking with Java (why? T_T) - Python
-=====================================
-    !python
-        >>> import Beach 
-        >>> beach = Beach("Cocoa Beach","Cocoa Beach") 
-        >>> beach.getName() 
-        u'Cocoa Beach' 
-        >>> print beach.getName() 
-        Cocoa Beach
-        
-    
-        >>> from java.lang import Math 
-        >>> Math.max(4, 7) 
-        7L 
-        >>> Math.pow(10,5) 
-        100000.0 
-        >>> Math.round(8.75) 
-        9L 
-        >>> Math.abs(9.765) 
-        9.765 
-        >>> Math.abs(-9.765) 
-        9.765 
-        >>> from java.lang import System as javasystem 
-        >>> javasystem.out.println("Hello") 
-        Hello
 
 -----
 
@@ -343,7 +254,6 @@ Django ( finally >=] )
 
 * **"The web framework for perfectionists with deadlines "**
 * In one word?  **a-w-e-s-o-m-e!!! **
-    * Although I didn't say perfect...
 * Killer features:
     * Django admin
     * is in Python
@@ -577,6 +487,70 @@ Uffs .... that was hard!! ..... **bazinga**!!
 
 -----
 
+Django - querys
+===============
+
+Some simple query operations:
+
+    !python
+        # save 
+        b = Blog(name='Beatles Blog', tagline='All the latest Beatles news.')
+        b.save()
+
+        # get
+        entry = Entry.objects.get(pk=1)
+        cheese_blog = Blog.objects.get(name="Cheddar Talk")
+
+        # m2m
+        joe = Author.objects.create(name="Joe")
+        entry.authors.add(joe)
+        
+        # get many entrys
+        all_entries = Entry.objects.all()
+        Entry.objects.order_by('headline')[5:10]
+        
+        # chaining query-sets objects (not that you should)
+        Entry.objects.filter(headline__startswith='What'
+            ).exclude(pub_date__gte=datetime.now()
+            ).filter(pub_date__gte=datetime(2005, 1, 1))
+
+------
+
+Django - querys
+===============
+
+Complex lookups with Q objects:
+
+    !python
+        Poll.objects.get( Q(question__startswith='Who'),
+            Q(pub_date=date(2005, 5, 2)) | Q(pub_date=date(2005, 5, 6)))
+
+following relationships backwards:
+
+    !python
+        b = Blog.objects.get(id=1)
+        b.entry_set.all()
+
+eager loading:
+
+    !python
+        e = Entry.objects.get(id=5)
+        # Hits the database again to get the related Blog object.
+        b = e.blog
+        
+        e = Entry.objects.select_related().get(id=5)
+        # Doesn't hit the database, because e.blog has been prepopulated in the previous query.
+        b = e.blog
+        
+raw (native) sql:
+
+    !python
+        Person.objects.raw('SELECT * FROM myapp_person')
+        TabelaQualuqer.objects.raw('QUERY REALMENTE LONGA E ASSUSTADORA, AQUI!')
+
+
+-----
+
 Django - pluggable apps
 =======================
 
@@ -600,20 +574,83 @@ some python goodies and other tips
 Django - auth / profiles
 ========================
 
+* Full authentication app on django.contrib.auth
+* django.contrib.auth.models.User:
+    * groups
+    * permission
+    * roles (staff & admininstrator, used by django-admin app)
+* hooks for custom profiles (like the get_profile() method)
+* ready-to-use views for commons operations:
+    * url(r'^login/$', 'django.contrib.auth.views.login',{'template_name': 'login.html'}),
+    * url(r'^logout/$','django.contrib.auth.views.logout',{'template_name': 'logout.html'}),
+* forms for commons operations: 
+    * AuthenticationForm, PasswordChangeForm, PasswordResetForm, UserChangeForm, UserCreationForm
 
 -----
 
 Django - scalability - caches
 ====================
+To setup:
 
-* Multiple caches? Nooo...thats hard!....isn't ? 
+    !python
+        CACHES = {
+            'default': {
+                'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+                'LOCATION': '127.0.0.1:11211',
+            }
+        }
+
+OBS: Memcached -> ability to share cache over multiple servers. 
+You can run Memcached daemons on multiple machines, and the program 
+will treat the group of machines as a single cache. Just pass a list in LOCATION 
+
+OBS2: BACKEND for dummy caching (for development purposes): 'django.core.cache.backends.dummy.DummyCache'
+
+To cache all site:
+
+    !python
+        MIDDLEWARE_CLASSES = (
+            # ...
+            'django.middleware.cache.UpdateCacheMiddleware',
+            'django.middleware.cache.FetchFromCacheMiddleware',
+        )
+
+
+-----
+
+Django - scalability - caches
+=============================
+
+To cache a view:
+    
+    !python
+        from django.views.decorators.cache import cache_page
+
+        @cache_page(60 * 15, cache='my_cache_name')
+        def my_view(request):
+            ...
+
+Template fragment cache:
+
+    !python
+        {% load cache %}
+        {% cache 500 sidebar %}
+            .. sidebar ..
+        {% endcache %}
+
+"low level" cache api:
+
+    !python
+        cache.set('my_key', 'my value!', 30)
+        cache.get('my_key')
+        cache.delete('my_key')
+
+
 
 -----
 
 Django - scalability - multi DBs
 ================================
-
-Multiple DBs? c'mon... even harder u.ú ...no?
 
     !python
         DATABASES = {
@@ -675,7 +712,7 @@ django-annoying -> one of my favorites (specially for ajax)
 django-registraion  
 django-profiles  
 django-pagination  
-django-video  -> probably usefull  
+django-video  -> probably usefull for us
 django-uploadify  
 **django-debug-toolbar**  
 **south**  -> migrations !!   
