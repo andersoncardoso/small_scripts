@@ -23,24 +23,23 @@ def remove_db():
     print(u'removing old db')
     # This is usefull only on our project structure (using a sqlite for dev)
     # change for your specific db/structure
-    subprocess.Pope(['rm', '../db/dev.db'])
+    subprocess.call(['rm', '../db/dev.db'])
 
 def syncdb():  
     print(u'syncing db')
-    subprocess.call(['./manage.py',  'syncdb', '--noinput',\
-                    SETTINGS])
+    subprocess.call(['./manage.py',  'syncdb', '--noinput', SETTINGS])
                     
-def app_schemamigration(app, initial=False):
+def app_schemamigration(app, initial=True):
     print(u'[{}] schemamigration'.format(app))
     subprocess.call(
         ['./manage.py','schemamigration',app,
          '--initial' if initial else '--auto', SETTINGS]) 
     
 def schemamigration(*args):
-    [app_schemamigration(app) for app in APP_LIST]
+    [app_schemamigration(app, initial=False) for app in APP_LIST]
 
 def schemamigration_initial(*args):
-    [app_schemamigration(app, initial=True) for app in APP_LIST]
+    [app_schemamigration(app) for app in APP_LIST]
 
 def app_migrate(app, fake=False):
     print(u'[{}] migrate'.format(app))
@@ -58,11 +57,11 @@ def run_cmd(opt):
         routines = {
             'build' : [remove_db, syncdb, schemamigration_initial, migrate_fake],
             'initial': [remove_db, syncdb, migrate],
-            'new_app' : [schemamigration_initial, migrate],
+            'new_app' : [app_schemamigration, app_migrate],
             'normal': [schemamigration, migrate],
             'one_app': [app_schemamigration, app_migrate],
         }
-        arg = sys.argv[2] if opt == 'one_app' else None
+        arg = sys.argv[2] if opt in ['one_app','new_app'] else None
         [cmd(arg) for cmd in routines[opt]]
     except Exception as err:
         print(u'Ops, invalid option : {} \n{}'.format(opt, err))
